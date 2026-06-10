@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Death Card Spokesperson Tracker</title>
+  <style>
+    :root {
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.13);
+      --text: #f8f1ff;
+      --muted: #bcaecc;
+      --accent: #d4af37;
+      --danger: #e55252;
+      --border: rgba(255,255,255,0.14);
+      --shadow: 0 24px 80px rgba(0,0,0,0.45);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(212,175,55,0.15), transparent 34%),
+        radial-gradient(circle at 80% 20%, rgba(167,73,255,0.12), transparent 34%),
+        linear-gradient(135deg, #0c0710 0%, #1b1025 58%, #0c0710 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 22px;
+      touch-action: manipulation;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      font-size: clamp(30px, 5vw, 58px);
+      letter-spacing: -0.045em;
+      line-height: 0.95;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: clamp(21px, 3vw, 34px);
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    h3 { font-size: 17px; margin-bottom: 8px; }
+    p { color: var(--muted); line-height: 1.45; }
+
+    button, input, textarea, select { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 18px;
+      color: var(--text);
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 750;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); background: rgba(255,255,255,0.17); }
+    button:active { transform: translateY(1px) scale(0.99); }
+    button:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+
+    .primary {
+      background: linear-gradient(135deg, #b78520, #e8c75d);
+      color: #1c1305;
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .danger {
+      background: linear-gradient(135deg, #7e1f2c, #e55252);
+      color: white;
+    }
+
+    .ghost { background: transparent; box-shadow: none; }
+
+    .small-btn {
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .app { width: min(1500px, 100%); margin: 0 auto; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      padding: 20px;
+    }
+
+    .status-card {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      align-content: center;
+    }
+
+    .stat {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 92px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 34px;
+      margin-top: 5px;
+      letter-spacing: -0.04em;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+    }
+
+    .setup textarea {
+      width: 100%;
+      min-height: 270px;
+      resize: vertical;
+      background: rgba(0,0,0,0.24);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    .setup textarea:focus {
+      border-color: rgba(212,175,55,0.75);
+      box-shadow: 0 0 0 4px rgba(212,175,55,0.10);
+    }
+
+    .main-area { display: grid; gap: 18px; }
+
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .player-chip {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 62px;
+      padding: 12px;
+      border-radius: 17px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .player-chip.dead {
+      opacity: 0.42;
+      filter: grayscale(0.45);
+      text-decoration: line-through;
+    }
+
+    .player-chip.on-gallows {
+      background: linear-gradient(135deg, rgba(229,82,82,0.35), rgba(255,255,255,0.08));
+      border-color: rgba(229,82,82,0.75);
+    }
+
+    .player-chip.spokesperson {
+      background: linear-gradient(135deg, rgba(212,175,55,0.34), rgba(255,255,255,0.08));
+      border-color: rgba(212,175,55,0.75);
+    }
+
+    .player-chip.eliminated-now {
+      background: linear-gradient(135deg, rgba(229,82,82,0.7), rgba(84,31,39,0.9));
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .player-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.28);
+      font-weight: 900;
+      color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .player-name {
+      font-weight: 850;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .player-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+      font-weight: 700;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .step-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab { opacity: 0.55; }
+
+    .tab.active {
+      opacity: 1;
+      background: rgba(212,175,55,0.17);
+      border-color: rgba(212,175,55,0.5);
+      color: var(--accent);
+    }
+
+    .picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .pick-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+      border-radius: 18px;
+      padding: 13px;
+      min-height: 64px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .pick-card.selected-death {
+      background: linear-gradient(135deg, rgba(229,82,82,0.52), rgba(255,255,255,0.09));
+      border-color: rgba(229,82,82,0.9);
+    }
+
+    .pick-card.selected-spokesperson {
+      background: linear-gradient(135deg, rgba(212,175,55,0.42), rgba(255,255,255,0.09));
+      border-color: rgba(212,175,55,0.9);
+    }
+
+    .pick-card.selected-eliminate {
+      background: linear-gradient(135deg, rgba(229,82,82,0.72), rgba(84,31,39,0.95));
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .badge.danger-badge {
+      background: rgba(229,82,82,0.18);
+      color: #ffb1b1;
+      border-color: rgba(229,82,82,0.45);
+    }
+
+    .badge.gold-badge {
+      background: rgba(212,175,55,0.16);
+      color: #f4df91;
+      border-color: rgba(212,175,55,0.45);
+    }
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .summary-card {
+      border-radius: 18px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      padding: 14px;
+    }
+
+    .summary-card.danger-card {
+      border-color: rgba(229,82,82,0.8);
+      background: linear-gradient(135deg, rgba(229,82,82,0.34), rgba(0,0,0,0.2));
+    }
+
+    .summary-card.gold-card {
+      border-color: rgba(212,175,55,0.75);
+      background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(0,0,0,0.2));
+    }
+
+    .big-text {
+      font-size: 28px;
+      font-weight: 950;
+      letter-spacing: -0.045em;
+      margin: 7px 0 0;
+      color: var(--text);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .history-item {
+      border-radius: 18px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--border);
+      padding: 14px;
+    }
+
+    .history-item strong { color: var(--accent); }
+
+    .export-preview {
+      width: 100%;
+      min-height: 180px;
+      margin-top: 12px;
+      background: rgba(0,0,0,0.25);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      padding: 26px;
+      border: 1px dashed rgba(255,255,255,0.22);
+      border-radius: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    .notice {
+      margin-top: 12px;
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(212,175,55,0.12);
+      border: 1px solid rgba(212,175,55,0.28);
+      color: #f4df91;
+      font-weight: 750;
+    }
+
+    @media (max-width: 940px) {
+      body { padding: 14px; }
+      .hero, .grid { grid-template-columns: 1fr; }
+      .status-card { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 620px) {
+      .status-card { grid-template-columns: 1fr; }
+      .players-grid, .picker { grid-template-columns: 1fr; }
+      button { width: 100%; justify-content: center; }
+      .small-btn { width: auto; }
+      .toolbar { flex-direction: column; }
+    }
+
+    @media print {
+      body { background: white; color: black; }
+      .card { box-shadow: none; background: white; border-color: #ddd; }
+      button, .setup, .step-tabs, .toolbar { display: none !important; }
+      p, .player-sub, .badge { color: #333; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="card">
+        <h1>Death Card Spokesperson Tracker</h1>
+        <p>
+          Start with 14 players. Each round, 3 players draw death cards. The remaining players choose a spokesperson,
+          and that spokesperson eliminates 2 of the 3 death-card players.
+        </p>
+        <div class="toolbar">
+          <button class="primary" id="newRoundBtn">Start New Round</button>
+          <button id="saveBtn">Save Progress</button>
+          <button id="loadBtn">Load Saved</button>
+          <button class="ghost" id="clearSaveBtn">Clear Save</button>
+          <button class="danger" id="fullResetBtn">Full Reset</button>
+        </div>
+      </div>
+
+      <div class="card status-card">
+        <div class="stat">
+          <span>Round</span>
+          <strong id="roundStat">0</strong>
+        </div>
+        <div class="stat">
+          <span>Alive</span>
+          <strong id="aliveStat">0</strong>
+        </div>
+        <div class="stat">
+          <span>Eliminated</span>
+          <strong id="outStat">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <aside class="card setup">
+        <div class="section-head">
+          <div>
+            <h2>Players</h2>
+            <p>Enter up to 14 names, one per line.</p>
+          </div>
+        </div>
+        <textarea id="namesInput" spellcheck="false">Player 1
+Player 2
+Player 3
+Player 4
+Player 5
+Player 6
+Player 7
+Player 8
+Player 9
+Player 10
+Player 11
+Player 12
+Player 13
+Player 14</textarea>
+        <div class="toolbar">
+          <button class="primary" id="applyNamesBtn">Apply Names</button>
+          <button id="fillBlankBtn">Fill 14 Defaults</button>
+        </div>
+        <div class="notice">
+          Flow: choose exactly 3 death cards → choose 1 spokesperson from the remaining players → spokesperson eliminates exactly 2.
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Current Game</h2>
+              <p id="gamePrompt">Apply player names, then start a round.</p>
+            </div>
+            <span class="badge" id="phaseBadge">Setup</span>
+          </div>
+
+          <div class="step-tabs">
+            <button class="tab active" id="tabPlayers">1. Cast</button>
+            <button class="tab" id="tabCards">2. Death Cards</button>
+            <button class="tab" id="tabSpokesperson">3. Spokesperson</button>
+            <button class="tab" id="tabEliminate">4. Eliminate</button>
+            <button class="tab" id="tabResult">5. Result</button>
+          </div>
+
+          <div id="playersView">
+            <div id="playersGrid" class="players-grid"></div>
+          </div>
+
+          <div id="cardsView" class="hidden">
+            <h3>Select exactly 3 death-card players</h3>
+            <p>Only these 3 players can be eliminated this round.</p>
+            <div id="deathPicker" class="picker"></div>
+            <div class="toolbar">
+              <button class="primary" id="confirmCardsBtn">Confirm Death Cards</button>
+              <button id="selectRandomDeathBtn">Random 3 Death Cards</button>
+              <button id="clearCardsBtn">Clear Selection</button>
+            </div>
+          </div>
+
+          <div id="spokespersonView" class="hidden">
+            <h3>Choose the spokesperson</h3>
+            <p>The spokesperson must be one of the remaining players who did not draw a death card.</p>
+            <div id="spokespersonPicker" class="picker"></div>
+            <div class="toolbar">
+              <button class="primary" id="confirmSpokespersonBtn">Confirm Spokesperson</button>
+              <button id="randomSpokespersonBtn">Random Spokesperson</button>
+              <button id="clearSpokespersonBtn">Clear Selection</button>
+            </div>
+          </div>
+
+          <div id="eliminateView" class="hidden">
+            <h3>Select exactly 2 players to eliminate</h3>
+            <p>The spokesperson chooses 2 of the 3 death-card players.</p>
+            <div id="eliminatePicker" class="picker"></div>
+            <div class="summary-box" id="decisionSummary"></div>
+            <div class="toolbar">
+              <button class="danger" id="confirmEliminationBtn">Confirm Elimination</button>
+              <button id="clearEliminationBtn">Clear Selection</button>
+            </div>
+          </div>
+
+          <div id="resultView" class="hidden">
+            <h3>Round result</h3>
+            <div id="resultBox" class="summary-box"></div>
+            <div class="toolbar">
+              <button class="primary" id="nextRoundFromResultBtn">Start Next Round</button>
+              <button id="backToCastBtn">Back to Cast</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Round History</h2>
+              <p>A running record of death cards, spokesperson, and eliminations.</p>
+            </div>
+            <button class="small-btn" id="copyHistoryBtn">Copy History</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Export Results</h2>
+              <p>Use this at the end of the game to save or copy the full result log.</p>
+            </div>
+            <span class="badge gold-badge">End Game</span>
+          </div>
+
+          <div class="toolbar">
+            <button class="primary" id="downloadCsvBtn">Download CSV</button>
+            <button id="downloadTxtBtn">Download Text Summary</button>
+            <button id="copyExportBtn">Copy Export Summary</button>
+            <button id="printBtn">Print / Save as PDF</button>
+          </div>
+
+          <textarea id="exportPreview" class="export-preview" readonly>No completed rounds yet.</textarea>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "death_card_spokesperson_tracker_v2_export";
+
+    const state = {
+      players: [],
+      round: 0,
+      phase: "setup",
+      currentDeathIds: [],
+      spokespersonId: null,
+      chosenEliminationIds: [],
+      latestResult: null,
+      history: []
+    };
+
+    const $ = id => document.getElementById(id);
+
+    const els = {
+      roundStat: $("roundStat"),
+      aliveStat: $("aliveStat"),
+      outStat: $("outStat"),
+      namesInput: $("namesInput"),
+      playersGrid: $("playersGrid"),
+      deathPicker: $("deathPicker"),
+      spokespersonPicker: $("spokespersonPicker"),
+      eliminatePicker: $("eliminatePicker"),
+      decisionSummary: $("decisionSummary"),
+      resultBox: $("resultBox"),
+      historyList: $("historyList"),
+      phaseBadge: $("phaseBadge"),
+      gamePrompt: $("gamePrompt"),
+      exportPreview: $("exportPreview"),
+      views: {
+        players: $("playersView"),
+        cards: $("cardsView"),
+        spokesperson: $("spokespersonView"),
+        eliminate: $("eliminateView"),
+        result: $("resultView")
+      },
+      tabs: {
+        players: $("tabPlayers"),
+        cards: $("tabCards"),
+        spokesperson: $("tabSpokesperson"),
+        eliminate: $("tabEliminate"),
+        result: $("tabResult")
+      }
+    };
+
+    function uid() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function alivePlayers() {
+      return state.players.filter(p => !p.eliminated);
+    }
+
+    function eliminatedPlayers() {
+      return state.players.filter(p => p.eliminated);
+    }
+
+    function getPlayer(id) {
+      return state.players.find(p => p.id === id);
+    }
+
+    function playerName(id) {
+      return getPlayer(id)?.name || "Unknown";
+    }
+
+    function cleanNames() {
+      return els.namesInput.value
+        .split(/\n/)
+        .map(n => n.trim())
+        .filter(Boolean)
+        .slice(0, 14);
+    }
+
+    function applyNames() {
+      const names = cleanNames();
+      if (names.length < 5) {
+        alert("Please enter at least 5 player names. You need 3 death cards, 1 spokesperson, and at least 1 other remaining player.");
+        return;
+      }
+
+      state.players = names.map((name, i) => ({
+        id: uid(),
+        name,
+        originalNumber: i + 1,
+        eliminated: false,
+        eliminatedRound: null
+      }));
+
+      state.round = 0;
+      state.phase = "players";
+      state.currentDeathIds = [];
+      state.spokespersonId = null;
+      state.chosenEliminationIds = [];
+      state.latestResult = null;
+      state.history = [];
+      render();
+    }
+
+    function fillDefaults() {
+      els.namesInput.value = Array.from({length: 14}, (_, i) => `Player ${i + 1}`).join("\n");
+    }
+
+    function canStartRound() {
+      return state.players.length && alivePlayers().length >= 4;
+    }
+
+    function startNewRound() {
+      if (!canStartRound()) {
+        alert("You need at least 4 surviving players to run this round: 3 death-card players and 1 spokesperson.");
+        return;
+      }
+
+      state.round += 1;
+      state.phase = "cards";
+      state.currentDeathIds = [];
+      state.spokespersonId = null;
+      state.chosenEliminationIds = [];
+      state.latestResult = null;
+      render();
+    }
+
+    function setPhase(phase) {
+      state.phase = phase;
+      render();
+    }
+
+    function toggleDeath(id) {
+      if (state.currentDeathIds.includes(id)) {
+        state.currentDeathIds = state.currentDeathIds.filter(x => x !== id);
+      } else {
+        if (state.currentDeathIds.length >= 3) {
+          alert("Only 3 players can draw death cards each round.");
+          return;
+        }
+        state.currentDeathIds.push(id);
+      }
+
+      if (state.currentDeathIds.includes(state.spokespersonId)) {
+        state.spokespersonId = null;
+      }
+      state.chosenEliminationIds = state.chosenEliminationIds.filter(x => state.currentDeathIds.includes(x));
+      render();
+    }
+
+    function clearCards() {
+      state.currentDeathIds = [];
+      state.spokespersonId = null;
+      state.chosenEliminationIds = [];
+      render();
+    }
+
+    function randomDeathCards() {
+      const alive = [...alivePlayers()];
+      if (alive.length < 3) return;
+      shuffle(alive);
+      state.currentDeathIds = alive.slice(0, 3).map(p => p.id);
+      state.spokespersonId = null;
+      state.chosenEliminationIds = [];
+      render();
+    }
+
+    function confirmCards() {
+      if (state.currentDeathIds.length !== 3) {
+        alert("Please select exactly 3 death-card players.");
+        return;
+      }
+      state.phase = "spokesperson";
+      render();
+    }
+
+    function spokespersonOptions() {
+      return alivePlayers().filter(p => !state.currentDeathIds.includes(p.id));
+    }
+
+    function chooseSpokesperson(id) {
+      state.spokespersonId = id;
+      render();
+    }
+
+    function randomSpokesperson() {
+      const options = spokespersonOptions();
+      if (!options.length) return;
+      state.spokespersonId = options[Math.floor(Math.random() * options.length)].id;
+      render();
+    }
+
+    function clearSpokesperson() {
+      state.spokespersonId = null;
+      render();
+    }
+
+    function confirmSpokesperson() {
+      if (!state.spokespersonId) {
+        alert("Please choose a spokesperson.");
+        return;
+      }
+      state.phase = "eliminate";
+      render();
+    }
+
+    function toggleElimination(id) {
+      if (state.chosenEliminationIds.includes(id)) {
+        state.chosenEliminationIds = state.chosenEliminationIds.filter(x => x !== id);
+      } else {
+        if (state.chosenEliminationIds.length >= 2) {
+          alert("The spokesperson can eliminate exactly 2 players.");
+          return;
+        }
+        state.chosenEliminationIds.push(id);
+      }
+      render();
+    }
+
+    function clearElimination() {
+      state.chosenEliminationIds = [];
+      render();
+    }
+
+    function confirmElimination() {
+      if (state.chosenEliminationIds.length !== 2) {
+        alert("Please select exactly 2 death-card players to eliminate.");
+        return;
+      }
+
+      const safeDeathId = state.currentDeathIds.find(id => !state.chosenEliminationIds.includes(id));
+
+      state.chosenEliminationIds.forEach(id => {
+        const p = getPlayer(id);
+        if (p) {
+          p.eliminated = true;
+          p.eliminatedRound = state.round;
+        }
+      });
+
+      const record = {
+        round: state.round,
+        deathIds: [...state.currentDeathIds],
+        spokespersonId: state.spokespersonId,
+        eliminatedIds: [...state.chosenEliminationIds],
+        savedDeathId: safeDeathId,
+        remainingAfterRound: alivePlayers().map(p => p.id),
+        date: new Date().toLocaleString()
+      };
+
+      state.latestResult = record;
+      state.history.unshift(record);
+      state.phase = "result";
+      render();
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      alert("Progress saved on this device.");
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        alert("No saved game found on this device.");
+        return;
+      }
+      try {
+        const parsed = JSON.parse(saved);
+        Object.assign(state, parsed);
+        els.namesInput.value = state.players.map(p => p.name).join("\n");
+        render();
+      } catch (e) {
+        alert("Saved data could not be loaded.");
+      }
+    }
+
+    function clearSave() {
+      if (!confirm("Clear the saved game from this device?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      alert("Saved game cleared.");
+    }
+
+    function fullReset() {
+      if (!confirm("Reset the whole tracker? This clears the current game, but not saved progress unless you also clear save.")) return;
+      fillDefaults();
+      state.players = [];
+      state.round = 0;
+      state.phase = "setup";
+      state.currentDeathIds = [];
+      state.spokespersonId = null;
+      state.chosenEliminationIds = [];
+      state.latestResult = null;
+      state.history = [];
+      render();
+    }
+
+    async function copyHistory() {
+      await copyText(historyText(), "There is no history to copy yet.", "History copied.");
+    }
+
+    async function copyExport() {
+      await copyText(exportText(), "There is no completed round data to copy yet.", "Export summary copied.");
+    }
+
+    async function copyText(text, emptyMessage, successMessage) {
+      if (!text.trim()) {
+        alert(emptyMessage);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        alert(successMessage);
+      } catch {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        alert(successMessage);
+      }
+    }
+
+    function historyText() {
+      return state.history.slice().reverse().map(h => {
+        return [
+          `ROUND ${h.round}`,
+          `Death cards: ${h.deathIds.map(playerName).join(", ")}`,
+          `Spokesperson: ${playerName(h.spokespersonId)}`,
+          `Eliminated: ${h.eliminatedIds.map(playerName).join(", ")}`,
+          `Saved from death cards: ${playerName(h.savedDeathId)}`,
+          `Remaining after round: ${(h.remainingAfterRound || []).map(playerName).join(", ")}`,
+          ""
+        ].join("\n");
+      }).join("\n");
+    }
+
+    function exportText() {
+      if (!state.history.length) return "";
+      const rounds = state.history.slice().reverse();
+      const alive = alivePlayers().map(p => p.name).join(", ") || "None";
+      const eliminated = eliminatedPlayers()
+        .sort((a, b) => (a.eliminatedRound || 0) - (b.eliminatedRound || 0))
+        .map(p => `${p.name} (R${p.eliminatedRound})`)
+        .join(", ") || "None";
+
+      return [
+        "DEATH CARD SPOKESPERSON TRACKER - FINAL RESULTS",
+        `Exported: ${new Date().toLocaleString()}`,
+        "",
+        `Rounds completed: ${rounds.length}`,
+        `Players remaining: ${alive}`,
+        `Players eliminated: ${eliminated}`,
+        "",
+        "ROUND-BY-ROUND LOG",
+        historyText()
+      ].join("\n");
+    }
+
+    function exportCsv() {
+      const rows = [
+        ["Round", "Death Card 1", "Death Card 2", "Death Card 3", "Spokesperson", "Eliminated 1", "Eliminated 2", "Saved Death Card Player", "Remaining After Round", "Completed At"]
+      ];
+
+      state.history.slice().reverse().forEach(h => {
+        rows.push([
+          h.round,
+          playerName(h.deathIds[0]),
+          playerName(h.deathIds[1]),
+          playerName(h.deathIds[2]),
+          playerName(h.spokespersonId),
+          playerName(h.eliminatedIds[0]),
+          playerName(h.eliminatedIds[1]),
+          playerName(h.savedDeathId),
+          (h.remainingAfterRound || []).map(playerName).join(" | "),
+          h.date || ""
+        ]);
+      });
+
+      rows.push([]);
+      rows.push(["Final Remaining Players", alivePlayers().map(p => p.name).join(" | ")]);
+      rows.push(["Final Eliminated Players", eliminatedPlayers().map(p => `${p.name} R${p.eliminatedRound}`).join(" | ")]);
+
+      return rows.map(row => row.map(csvCell).join(",")).join("\n");
+    }
+
+    function csvCell(value) {
+      const str = String(value ?? "");
+      return `"${str.replaceAll('"', '""')}"`;
+    }
+
+    function downloadFile(filename, content, mimeType) {
+      if (!state.history.length) {
+        alert("No completed rounds to export yet.");
+        return;
+      }
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function render() {
+      renderStats();
+      renderPhase();
+      renderPlayers();
+      renderDeathPicker();
+      renderSpokespersonPicker();
+      renderEliminatePicker();
+      renderResult();
+      renderHistory();
+      renderExportPreview();
+      renderPrompt();
+    }
+
+    function renderStats() {
+      els.roundStat.textContent = state.round;
+      els.aliveStat.textContent = alivePlayers().length;
+      els.outStat.textContent = eliminatedPlayers().length;
+    }
+
+    function renderPhase() {
+      const phaseLabels = {
+        setup: "Setup",
+        players: "Cast",
+        cards: "Death Cards",
+        spokesperson: "Spokesperson",
+        eliminate: "Eliminate",
+        result: "Result"
+      };
+
+      els.phaseBadge.textContent = phaseLabels[state.phase] || state.phase;
+
+      Object.entries(els.views).forEach(([key, el]) => {
+        el.classList.toggle("hidden", key !== viewForPhase());
+      });
+
+      Object.entries(els.tabs).forEach(([key, el]) => {
+        el.classList.toggle("active", key === viewForPhase());
+      });
+
+      $("newRoundBtn").disabled = !canStartRound() || ["cards", "spokesperson", "eliminate"].includes(state.phase);
+      $("nextRoundFromResultBtn").disabled = !canStartRound();
+    }
+
+    function viewForPhase() {
+      if (["setup", "players"].includes(state.phase)) return "players";
+      return state.phase;
+    }
+
+    function renderPrompt() {
+      if (!state.players.length) {
+        els.gamePrompt.textContent = "Apply player names, then start a round.";
+      } else if (state.phase === "cards") {
+        els.gamePrompt.textContent = `Round ${state.round}: select exactly 3 players who drew death cards.`;
+      } else if (state.phase === "spokesperson") {
+        els.gamePrompt.textContent = `Round ${state.round}: choose the spokesperson from the remaining players.`;
+      } else if (state.phase === "eliminate") {
+        els.gamePrompt.textContent = `Round ${state.round}: ${playerName(state.spokespersonId)} must eliminate 2 of the 3 death-card players.`;
+      } else if (state.phase === "result") {
+        els.gamePrompt.textContent = `Round ${state.round} complete. Start the next round when ready, or export results below.`;
+      } else if (!canStartRound() && state.players.length) {
+        els.gamePrompt.textContent = "Not enough players remain for another full round. Export the results below.";
+      } else {
+        els.gamePrompt.textContent = "Start a new round when ready.";
+      }
+    }
+
+    function renderPlayers() {
+      if (!state.players.length) {
+        els.playersGrid.innerHTML = `<div class="empty-state">No players applied yet.</div>`;
+        return;
+      }
+
+      els.playersGrid.innerHTML = state.players.map(p => {
+        const onGallows = state.currentDeathIds.includes(p.id);
+        const spokesperson = state.spokespersonId === p.id;
+        const eliminatedNow = state.chosenEliminationIds.includes(p.id) && ["eliminate", "result"].includes(state.phase);
+        const classes = [
+          "player-chip",
+          p.eliminated ? "dead" : "",
+          onGallows && !p.eliminated ? "on-gallows" : "",
+          spokesperson && !p.eliminated ? "spokesperson" : "",
+          eliminatedNow ? "eliminated-now" : ""
+        ].join(" ");
+
+        const status = p.eliminated
+          ? `Eliminated R${p.eliminatedRound}`
+          : eliminatedNow
+            ? "Selected for elimination"
+            : spokesperson
+              ? "Spokesperson"
+              : onGallows
+                ? "Death card"
+                : "Alive";
+
+        return `
+          <div class="${classes}">
+            <div class="player-number">${p.originalNumber}</div>
+            <div>
+              <div class="player-name">${escapeHtml(p.name)}</div>
+              <div class="player-sub">${status}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDeathPicker() {
+      const alive = alivePlayers();
+      if (!alive.length) {
+        els.deathPicker.innerHTML = `<div class="empty-state">Apply players first.</div>`;
+        return;
+      }
+
+      els.deathPicker.innerHTML = alive.map(p => {
+        const selected = state.currentDeathIds.includes(p.id);
+        return `
+          <button class="pick-card ${selected ? "selected-death" : ""}" onclick="toggleDeath('${p.id}')">
+            <span>${escapeHtml(p.name)}</span>
+            <span class="badge ${selected ? "danger-badge" : ""}">${selected ? "Death Card" : "Safe"}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderSpokespersonPicker() {
+      const options = spokespersonOptions();
+
+      if (!state.currentDeathIds.length) {
+        els.spokespersonPicker.innerHTML = `<div class="empty-state">Select death-card players first.</div>`;
+        return;
+      }
+
+      if (!options.length) {
+        els.spokespersonPicker.innerHTML = `<div class="empty-state">No eligible spokespersons.</div>`;
+        return;
+      }
+
+      els.spokespersonPicker.innerHTML = options.map(p => {
+        const selected = state.spokespersonId === p.id;
+        return `
+          <button class="pick-card ${selected ? "selected-spokesperson" : ""}" onclick="chooseSpokesperson('${p.id}')">
+            <span>${escapeHtml(p.name)}</span>
+            <span class="badge ${selected ? "gold-badge" : ""}">${selected ? "Spokesperson" : "Eligible"}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderEliminatePicker() {
+      if (state.currentDeathIds.length !== 3) {
+        els.eliminatePicker.innerHTML = `<div class="empty-state">Select exactly 3 death-card players first.</div>`;
+        els.decisionSummary.innerHTML = "";
+        return;
+      }
+
+      els.eliminatePicker.innerHTML = state.currentDeathIds.map(id => {
+        const p = getPlayer(id);
+        if (!p) return "";
+        const selected = state.chosenEliminationIds.includes(id);
+        const saved = state.chosenEliminationIds.length === 2 && !selected;
+        return `
+          <button class="pick-card ${selected ? "selected-eliminate" : ""}" onclick="toggleElimination('${id}')">
+            <span>${escapeHtml(p.name)}</span>
+            <span class="badge ${selected ? "danger-badge" : saved ? "gold-badge" : ""}">
+              ${selected ? "Eliminate" : saved ? "Saved" : "Death Card"}
+            </span>
+          </button>
+        `;
+      }).join("");
+
+      const savedId = state.currentDeathIds.find(id => !state.chosenEliminationIds.includes(id));
+      els.decisionSummary.innerHTML = `
+        <div class="summary-card gold-card">
+          <span class="badge gold-badge">Spokesperson</span>
+          <div class="big-text">${escapeHtml(playerName(state.spokespersonId))}</div>
+        </div>
+        <div class="summary-card danger-card">
+          <span class="badge danger-badge">Selected to eliminate</span>
+          <div class="big-text">${state.chosenEliminationIds.length ? escapeHtml(state.chosenEliminationIds.map(playerName).join(", ")) : "None yet"}</div>
+        </div>
+        <div class="summary-card">
+          <span class="badge">Remaining death-card player</span>
+          <div class="big-text">${state.chosenEliminationIds.length === 2 ? escapeHtml(playerName(savedId)) : "Choose 2 first"}</div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      if (!state.latestResult) {
+        els.resultBox.innerHTML = `<div class="empty-state">No completed round yet.</div>`;
+        return;
+      }
+
+      const h = state.latestResult;
+      els.resultBox.innerHTML = `
+        <div class="summary-card">
+          <span class="badge danger-badge">Death Cards</span>
+          <div class="big-text">${escapeHtml(h.deathIds.map(playerName).join(", "))}</div>
+        </div>
+        <div class="summary-card gold-card">
+          <span class="badge gold-badge">Spokesperson</span>
+          <div class="big-text">${escapeHtml(playerName(h.spokespersonId))}</div>
+        </div>
+        <div class="summary-card danger-card">
+          <span class="badge danger-badge">Eliminated</span>
+          <div class="big-text">${escapeHtml(h.eliminatedIds.map(playerName).join(", "))}</div>
+        </div>
+        <div class="summary-card">
+          <span class="badge">Saved</span>
+          <div class="big-text">${escapeHtml(playerName(h.savedDeathId))}</div>
+        </div>
+      `;
+    }
+
+    function renderHistory() {
+      if (!state.history.length) {
+        els.historyList.innerHTML = `<div class="empty-state">No completed rounds yet.</div>`;
+        return;
+      }
+
+      els.historyList.innerHTML = state.history.map(h => {
+        return `
+          <div class="history-item">
+            <h3><strong>Round ${h.round}</strong> — Eliminated ${escapeHtml(h.eliminatedIds.map(playerName).join(", "))}</h3>
+            <p><strong>Death cards:</strong> ${escapeHtml(h.deathIds.map(playerName).join(", "))}</p>
+            <p><strong>Spokesperson:</strong> ${escapeHtml(playerName(h.spokespersonId))}</p>
+            <p><strong>Saved from death cards:</strong> ${escapeHtml(playerName(h.savedDeathId))}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderExportPreview() {
+      els.exportPreview.value = exportText() || "No completed rounds yet.";
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    $("applyNamesBtn").addEventListener("click", applyNames);
+    $("fillBlankBtn").addEventListener("click", fillDefaults);
+    $("newRoundBtn").addEventListener("click", startNewRound);
+    $("confirmCardsBtn").addEventListener("click", confirmCards);
+    $("selectRandomDeathBtn").addEventListener("click", randomDeathCards);
+    $("clearCardsBtn").addEventListener("click", clearCards);
+    $("confirmSpokespersonBtn").addEventListener("click", confirmSpokesperson);
+    $("randomSpokespersonBtn").addEventListener("click", randomSpokesperson);
+    $("clearSpokespersonBtn").addEventListener("click", clearSpokesperson);
+    $("confirmEliminationBtn").addEventListener("click", confirmElimination);
+    $("clearEliminationBtn").addEventListener("click", clearElimination);
+    $("saveBtn").addEventListener("click", saveProgress);
+    $("loadBtn").addEventListener("click", loadProgress);
+    $("clearSaveBtn").addEventListener("click", clearSave);
+    $("fullResetBtn").addEventListener("click", fullReset);
+    $("copyHistoryBtn").addEventListener("click", copyHistory);
+    $("nextRoundFromResultBtn").addEventListener("click", startNewRound);
+    $("backToCastBtn").addEventListener("click", () => setPhase("players"));
+    $("downloadCsvBtn").addEventListener("click", () => downloadFile("death-card-results.csv", exportCsv(), "text/csv;charset=utf-8"));
+    $("downloadTxtBtn").addEventListener("click", () => downloadFile("death-card-results.txt", exportText(), "text/plain;charset=utf-8"));
+    $("copyExportBtn").addEventListener("click", copyExport);
+    $("printBtn").addEventListener("click", () => window.print());
+
+    $("tabPlayers").addEventListener("click", () => setPhase("players"));
+    $("tabCards").addEventListener("click", () => {
+      if (!state.players.length) return;
+      if (state.round === 0) startNewRound();
+      else setPhase("cards");
+    });
+    $("tabSpokesperson").addEventListener("click", () => {
+      if (state.currentDeathIds.length === 3) setPhase("spokesperson");
+    });
+    $("tabEliminate").addEventListener("click", () => {
+      if (state.currentDeathIds.length === 3 && state.spokespersonId) setPhase("eliminate");
+    });
+    $("tabResult").addEventListener("click", () => {
+      if (state.latestResult) setPhase("result");
+    });
+
+    window.toggleDeath = toggleDeath;
+    window.chooseSpokesperson = chooseSpokesperson;
+    window.toggleElimination = toggleElimination;
+
+    fillDefaults();
+    render();
+  </script>
+</body>
+</html>
